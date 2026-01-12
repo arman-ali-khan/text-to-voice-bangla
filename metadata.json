@@ -1,0 +1,7 @@
+{
+  "name": "Bengali Storyteller TTS",
+  "description": "An elegant Text-to-Speech application using Gemini 2.5 Flash TTS to bring Bengali literature to life with high-quality AI voices.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
