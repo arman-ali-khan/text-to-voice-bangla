@@ -141,8 +141,8 @@ const App: React.FC = () => {
     setError(null);
     try {
       const updates: any = {};
-      if (settingsName && settingsName !== user.full_name) {
-        updates.full_name = settingsName;
+      if (settingsName && settingsName.trim() !== user.full_name) {
+        updates.full_name = settingsName.trim();
       }
       if (settingsKey && settingsKey.trim() !== '') {
         updates.api_key = settingsKey.trim();
@@ -151,7 +151,7 @@ const App: React.FC = () => {
       if (Object.keys(updates).length > 0) {
         const updated = await updateProfileSettings(user.id, updates);
         setUser(updated);
-        // Ensure state and local storage reflect what was successfully saved to DB
+        // Ensure the active API key is synchronized immediately
         if (updated.api_key) {
           setGeminiKey(updated.api_key);
           localStorage.setItem('gemini_api_key', updated.api_key);
@@ -163,7 +163,7 @@ const App: React.FC = () => {
       setShowKeyPrompt(false);
     } catch (err: any) {
       console.error("Settings update failed:", err);
-      setError(err.message || "Failed to save settings. Please ensure your database table supports 'api_key'.");
+      setError(err.message || "Failed to save settings to database.");
     } finally {
       setSettingsSaving(false);
     }
@@ -225,7 +225,8 @@ const App: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!geminiKey) { setShowKeyPrompt(true); return; }
+    const activeKey = user?.api_key || geminiKey;
+    if (!activeKey) { setShowKeyPrompt(true); return; }
     if (!user) { setShowAuth(true); return; }
     if (segments.some(s => !s.text.trim())) { setError("Please fill in all dialogue boxes."); return; }
     if (activeSpeakerCount > 2) { setError("Maximum 2 characters allowed."); return; }
@@ -234,7 +235,7 @@ const App: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const base64Audio = await generateMultiSpeakerSpeech(segments, speakers, geminiKey);
+      const base64Audio = await generateMultiSpeakerSpeech(segments, speakers, activeKey);
       const totalChars = segments.reduce((acc, s) => acc + s.text.length, 0);
       await logGeneration(user.id, segments, speakers, totalChars);
       setUser(prev => prev ? { ...prev, usage_chars: (prev.usage_chars || 0) + totalChars } : null);
@@ -300,6 +301,9 @@ const App: React.FC = () => {
     a.click();
     document.body.removeChild(a);
   };
+
+  // Ensure the key passed to VoiceSelector is always the latest from database or local state
+  const selectorApiKey = user?.api_key || geminiKey;
 
   return (
     <div className="min-h-screen bg-[#050505] text-gray-100 font-sans selection:bg-indigo-500/30">
@@ -458,7 +462,7 @@ const App: React.FC = () => {
               <h2 className="text-2xl font-black">Add Persona</h2>
               <button onClick={() => setIsCreatingSpeaker(false)} className="text-gray-500 hover:text-white">&times;</button>
             </div>
-            <VoiceSelector apiKey={geminiKey} voices={availableVoices} onPersonaSelect={(p) => {
+            <VoiceSelector apiKey={selectorApiKey} voices={availableVoices} onPersonaSelect={(p) => {
               setSpeakers([...speakers, { id: Date.now().toString(), name: p.label, voice: p.name, personaId: p.id }]);
               setIsCreatingSpeaker(false);
             }} />
@@ -473,7 +477,7 @@ const App: React.FC = () => {
               <h2 className="text-2xl font-black">Switch Voice</h2>
               <button onClick={() => setEditingSpeakerId(null)} className="text-gray-500 hover:text-white">&times;</button>
             </div>
-            <VoiceSelector apiKey={geminiKey} voices={availableVoices} selectedPersonaId={speakers.find(s => s.id === editingSpeakerId)?.personaId} onPersonaSelect={(p) => updateSpeakerVoice(editingSpeakerId, p)} />
+            <VoiceSelector apiKey={selectorApiKey} voices={availableVoices} selectedPersonaId={speakers.find(s => s.id === editingSpeakerId)?.personaId} onPersonaSelect={(p) => updateSpeakerVoice(editingSpeakerId, p)} />
           </div>
         </div>
       )}
