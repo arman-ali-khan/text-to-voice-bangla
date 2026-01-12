@@ -77,15 +77,31 @@ export const loginUser = async (email: string, password: string): Promise<UserPr
 };
 
 export const updateProfileSettings = async (userId: string, updates: { full_name?: string; api_key?: string }): Promise<UserProfile> => {
-  const { data, error } = await supabase
+  // Ensure we are updating the current user's profile
+  const { error } = await supabase
     .from('profiles')
     .update(updates)
+    .eq('id', userId);
+
+  if (error) {
+    console.error("Supabase Update Error:", error);
+    throw error;
+  }
+  
+  // Always perform a fresh fetch to get the updated row, 
+  // bypassing potential RLS restrictions on 'update ... select' returns
+  const { data: refetched, error: fetchError } = await supabase
+    .from('profiles')
+    .select('*')
     .eq('id', userId)
-    .select()
     .single();
 
-  if (error) throw error;
-  return data as UserProfile;
+  if (fetchError) {
+    console.error("Supabase Fetch Error after update:", fetchError);
+    throw fetchError;
+  }
+
+  return refetched as UserProfile;
 };
 
 export const saveStory = async (userId: string, title: string, content: { segments: Segment[]; speakers: Speaker[] }) => {

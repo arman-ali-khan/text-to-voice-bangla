@@ -126,25 +126,44 @@ const App: React.FC = () => {
     }
   };
 
+  const openSettings = () => {
+    if (user) {
+      setSettingsName(user.full_name);
+      setSettingsKey(''); 
+      setShowSettings(true);
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setSettingsSaving(true);
     setError(null);
     try {
-      const updates: any = { full_name: settingsName };
-      if (settingsKey) {
-        updates.api_key = settingsKey;
-        setGeminiKey(settingsKey);
-        localStorage.setItem('gemini_api_key', settingsKey);
+      const updates: any = {};
+      if (settingsName && settingsName !== user.full_name) {
+        updates.full_name = settingsName;
       }
-      const updated = await updateProfileSettings(user.id, updates);
-      setUser(updated);
+      if (settingsKey && settingsKey.trim() !== '') {
+        updates.api_key = settingsKey.trim();
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        const updated = await updateProfileSettings(user.id, updates);
+        setUser(updated);
+        // Ensure state and local storage reflect what was successfully saved to DB
+        if (updated.api_key) {
+          setGeminiKey(updated.api_key);
+          localStorage.setItem('gemini_api_key', updated.api_key);
+        }
+      }
+      
       setSettingsKey('');
       setShowSettings(false);
       setShowKeyPrompt(false);
     } catch (err: any) {
-      setError(err.message || "Failed to save settings.");
+      console.error("Settings update failed:", err);
+      setError(err.message || "Failed to save settings. Please ensure your database table supports 'api_key'.");
     } finally {
       setSettingsSaving(false);
     }
@@ -154,10 +173,12 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!user || !settingsKey) return;
     try {
-      const updated = await updateProfileSettings(user.id, { api_key: settingsKey });
+      const updated = await updateProfileSettings(user.id, { api_key: settingsKey.trim() });
       setUser(updated);
-      setGeminiKey(settingsKey);
-      localStorage.setItem('gemini_api_key', settingsKey);
+      if (updated.api_key) {
+        setGeminiKey(updated.api_key);
+        localStorage.setItem('gemini_api_key', updated.api_key);
+      }
       setSettingsKey('');
       setShowKeyPrompt(false);
     } catch (err: any) {
@@ -377,7 +398,7 @@ const App: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={handleSaveStory} disabled={isSaving} className="px-6 py-3 rounded-2xl bg-white text-black font-black text-xs hover:bg-indigo-500 hover:text-white transition-all">SAVE STORY</button>
-                <button onClick={() => setShowSettings(true)} className="w-12 h-12 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center hover:border-indigo-500 transition-all text-xl shadow-lg">⚙️</button>
+                <button onClick={openSettings} className="w-12 h-12 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center hover:border-indigo-500 transition-all text-xl shadow-lg">⚙️</button>
               </div>
             </div>
 
