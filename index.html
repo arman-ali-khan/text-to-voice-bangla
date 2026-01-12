@@ -1,33 +1,121 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bengali Storyteller TTS</title>
+    <title>Bengali Multivoice Storyteller</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Serif+Bengali:wght@400;700&display=swap" rel="stylesheet">
     <style>
       body {
         font-family: 'Inter', sans-serif;
-        background: #f8fafc;
+        background: #050505;
+        color: #f8fafc;
+        overflow-y: scroll;
       }
       .bengali-font {
         font-family: 'Noto Serif Bengali', serif;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #1f1f23;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #2a2a2e;
+      }
+      @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .animate-slide-up {
+        animation: slideUp 0.5s ease-out forwards;
+      }
+
+      /* Waveform Animation */
+      .wave-container {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 24px;
+      }
+      .wave-bar {
+        width: 2px;
+        background: #6366f1;
+        border-radius: 1px;
+        height: 4px;
+        transition: height 0.2s ease;
+      }
+      .wave-active .wave-bar {
+        animation: wave-pulse 1s ease-in-out infinite;
+      }
+      @keyframes wave-pulse {
+        0%, 100% { height: 4px; opacity: 0.5; }
+        50% { height: 20px; opacity: 1; }
+      }
+      .wave-bar:nth-child(2n) { animation-delay: 0.1s; }
+      .wave-bar:nth-child(3n) { animation-delay: 0.2s; }
+      .wave-bar:nth-child(4n) { animation-delay: 0.3s; }
+      .wave-bar:nth-child(5n) { animation-delay: 0.4s; }
+
+      /* Custom Range Input Styling */
+      input[type=range] {
+        -webkit-appearance: none;
+        background: transparent;
+        cursor: pointer;
+      }
+      input[type=range]:focus {
+        outline: none;
+      }
+      /* Track */
+      input[type=range]::-webkit-slider-runnable-track {
+        background: rgba(255, 255, 255, 0.05);
+        height: 4px;
+        border-radius: 2px;
+      }
+      input[type=range]::-moz-range-track {
+        background: rgba(255, 255, 255, 0.05);
+        height: 4px;
+        border-radius: 2px;
+      }
+      /* Thumb */
+      input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 12px;
+        width: 12px;
+        border-radius: 50%;
+        background: #6366f1;
+        margin-top: -4px; /* Centers thumb on track */
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+      }
+      input[type=range]::-moz-range-thumb {
+        height: 12px;
+        width: 12px;
+        border-radius: 50%;
+        background: #6366f1;
+        border: none;
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.90.1"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
